@@ -20,8 +20,7 @@
 # production
 /build
 
-# database
-/drizzle
+# database assets
 
 # misc
 .DS_Store
@@ -35,6 +34,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
