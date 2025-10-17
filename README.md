@@ -36,19 +36,20 @@ An opinionated Next.js 15 App Router project for TypeScript-only development. It
 
 ## Available scripts
 
-| Script | Description |
-| --- | --- |
-| `npm run dev` | Start the Next.js development server with Turbopack. |
-| `npm run build` | Create a production build. |
-| `npm run start` | Serve the production build. |
-| `npm run lint` | Run ESLint with project-aware TypeScript settings. |
-| `npm run lint:fix` | Lint and automatically fix fixable issues. |
-| `npm run typecheck` | Execute `tsc --noEmit` to ensure type safety. |
-| `npm run format` | Check formatting with Prettier. |
-| `npm run format:write` | Format files in-place with Prettier. |
-| `npm run db:generate` | Generate SQL migrations from the Drizzle schema. |
-| `npm run db:push` | Push the generated migrations to the database. |
-| `npm run db:studio` | Launch Drizzle Studio for interactive exploration. |
+| Script                 | Description                                          |
+| ---------------------- | ---------------------------------------------------- |
+| `npm run dev`          | Start the Next.js development server with Turbopack. |
+| `npm run build`        | Create a production build.                           |
+| `npm run start`        | Serve the production build.                          |
+| `npm run lint`         | Run ESLint with project-aware TypeScript settings.   |
+| `npm run lint:fix`     | Lint and automatically fix fixable issues.           |
+| `npm run typecheck`    | Execute `tsc --noEmit` to ensure type safety.        |
+| `npm run format`       | Check formatting with Prettier.                      |
+| `npm run format:write` | Format files in-place with Prettier.                 |
+| `npm run db:generate`  | Generate SQL migrations from the Drizzle schema.     |
+| `npm run db:push`      | Push the generated migrations to the database.       |
+| `npm run db:studio`    | Launch Drizzle Studio for interactive exploration.   |
+| `npm run db:seed`      | Seed the database with initial sample data.          |
 
 ## Project structure
 
@@ -60,8 +61,12 @@ app/
 lib/
   ai/provider.ts           # Helper to register the OpenAI Agents API key
   db/client.ts             # Neon HTTP driver + Drizzle singleton
-  db/schema.ts             # Example Drizzle schema
-drizzle.config.ts         # Drizzle CLI configuration
+  db/schema.ts             # Drizzle schema with learners, skills, units, activities
+  db/seed.ts               # Database seeding script
+  db/README.md             # Database documentation
+  session.ts               # Anonymous session management with cookies
+drizzle/                   # Generated migrations directory
+drizzle.config.ts          # Drizzle CLI configuration
 .env.example               # Environment variable template
 ```
 
