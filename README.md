@@ -4,15 +4,15 @@ An opinionated Next.js 15 App Router project for TypeScript-only development. It
 
 ## What's included
 
-- **Next.js App Router** with strict TypeScript configuration and path aliases.
-- **Styling** via Tailwind CSS v4 with shared design tokens in `app/globals.css`.
-- **Database tooling** powered by Drizzle ORM, Neon HTTP driver, and CLI helpers.
-- **OpenAI Agents SDK** with a helper to register your API key and a health endpoint.
-- **DX utilities**: ESLint (project-aware), Prettier, and dedicated npm scripts.
+- Next.js App Router with strict TypeScript configuration and path aliases.
+- Styling via Tailwind CSS v4 with shared design tokens in `app/globals.css`.
+- Database tooling powered by Drizzle ORM, Neon HTTP driver, and CLI helpers.
+- OpenAI Agents SDK with a helper to register your API key and a health endpoint.
+- DX utilities: ESLint (project-aware), Prettier, and dedicated npm scripts.
 
 ## Getting started
 
-1. Install dependencies (already done in this scaffold):
+1. Install dependencies:
 
    ```bash
    npm install
@@ -24,7 +24,7 @@ An opinionated Next.js 15 App Router project for TypeScript-only development. It
    cp .env.example .env.local
    ```
 
-   Update `OPENAI_API_KEY` and `DATABASE_URL` before running database or agent features.
+   Set values for `OPENAI_API_KEY` and `DATABASE_URL` before running database or agent features.
 
 3. Start the development server:
 
@@ -32,7 +32,16 @@ An opinionated Next.js 15 App Router project for TypeScript-only development. It
    npm run dev
    ```
 
-   Visit [http://localhost:3000](http://localhost:3000) to see the landing page.
+   Visit http://localhost:3000 to see the landing page.
+
+## Environment variables
+
+Required variables (locally via `.env.local` and in Vercel Project Settings):
+
+- DATABASE_URL: Postgres connection string (e.g. from Neon)
+- OPENAI_API_KEY: Your OpenAI API key
+
+See `.env.example` for the expected keys. The `/api/health` endpoint reports whether these are configured.
 
 ## Available scripts
 
@@ -75,9 +84,10 @@ drizzle.config.ts          # Drizzle CLI configuration
 Drizzle ORM is configured to use the Neon HTTP driver for serverless-friendly Postgres access.
 
 - Define your tables in `lib/db/schema.ts`.
-- Generate migrations with `npm run db:generate`.
-- Apply migrations using `npm run db:push`.
+- Generate migrations with `npm run db:generate` (drizzle-kit generate).
+- Apply migrations using `npm run db:push` (drizzle-kit push).
 - Inspect and modify data via `npm run db:studio`.
+- Optionally seed local or remote data with `npm run db:seed`.
 
 `drizzle.config.ts` will stop the CLI if `DATABASE_URL` is not defined, preventing accidental misconfiguration.
 
@@ -93,5 +103,44 @@ The `@openai/agents` package is installed with a convenience helper (`lib/ai/pro
 
 - Prettier configuration lives in `package.json` and can be enforced with `npm run format` or `npm run format:write`.
 - ESLint uses the flat config, extends the Next.js presets, and integrates Prettier while pointing at `tsconfig.json` for type-aware rules.
+
+## Deployment (Vercel)
+
+The project is optimized for Vercel. Follow these steps to deploy:
+
+1. Create a Postgres database (Neon recommended) and note your connection string.
+2. Run database migrations against the target database (before first deploy):
+   - Either export the URL and push directly:
+     ```bash
+     export DATABASE_URL="postgresql://user:password@host/db"
+     npm run db:push
+     ```
+   - Or temporarily place it in a local `.env.local` and run `npm run db:push`.
+   - (Optional) Seed initial data: `npm run db:seed`
+3. Push your repository to GitHub and import it as a new project in Vercel.
+4. In Vercel → Project Settings → Environment Variables, add the following for Production and Preview:
+   - `DATABASE_URL` (required)
+   - `OPENAI_API_KEY` (required if using agent features)
+5. Build settings:
+   - Framework: Next.js (auto-detected)
+   - Build command: `npm run build`
+   - Install command: `npm ci` (auto)
+   - Output directory: `.next` (auto)
+6. Deploy. After the first deployment, verify readiness at `/api/health`.
+
+Notes:
+- Vercel builds do not run Drizzle migrations automatically. Re-run `npm run db:push` whenever you change the schema.
+- The production server is started by Vercel; locally you can simulate with `npm run build && npm run start`.
+
+## Continuous Integration (CI)
+
+A basic GitHub Actions workflow runs on every push and pull request to ensure the project is ready to deploy:
+
+- Installs dependencies with `npm ci`
+- Lints with `npm run lint`
+- Typechecks with `npm run typecheck`
+- Builds with `npm run build`
+
+You can find it at `.github/workflows/ci.yml`.
 
 You're ready to ship — customize the schema, wire up agents, and start building!
