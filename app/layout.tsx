@@ -17,10 +17,13 @@ const geistMono = Geist_Mono({
 });
 
 const navigation = [
+  { label: "Home", href: "/", external: false },
+  { label: "Learn", href: "/learn", external: false },
+  { label: "Progress", href: "/progress", external: false },
+  { label: "Health Check", href: "/api/health", external: false },
   { label: "Next.js Docs", href: "https://nextjs.org/docs/app", external: true },
   { label: "Drizzle ORM", href: "https://orm.drizzle.team", external: true },
   { label: "OpenAI Agents", href: "https://github.com/openai/agents", external: true },
-  { label: "Health Check", href: "/api/health", external: false },
 ] as const;
 
 const navLinkClasses =
