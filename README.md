@@ -1,6 +1,6 @@
-# Next.js AI Starter
+# aiDapt - AI-Powered Learning Platform
 
-An opinionated Next.js 15 App Router project for TypeScript-only development. It bundles Drizzle ORM, the Neon serverless driver, Tailwind CSS v4, and the OpenAI Agents SDK so you can ship AI-enabled products without the boilerplate.
+An intelligent learning platform that generates personalized micro-courses using AI. Built with Next.js 15, Drizzle ORM, and OpenAI Agents SDK to create adaptive learning experiences.
 
 ## What's included
 
@@ -26,7 +26,19 @@ An opinionated Next.js 15 App Router project for TypeScript-only development. It
 
    Set values for `OPENAI_API_KEY` and `DATABASE_URL` before running database or agent features.
 
-3. Start the development server:
+3. Set up the database:
+
+   ```bash
+   npm run db:push      # Push schema to database
+   ```
+
+   **⚠️ Important**: Run `npm run db:push` whenever you:
+   - Clone the project for the first time
+   - Pull schema changes from git
+   - Modify `lib/db/schema.ts`
+   - Get "column does not exist" errors
+
+4. Start the development server:
 
    ```bash
    npm run dev
@@ -143,4 +155,4 @@ A basic GitHub Actions workflow runs on every push and pull request to ensure th
 
 You can find it at `.github/workflows/ci.yml`.
 
-You're ready to ship — customize the schema, wire up agents, and start building!
+Start creating personalized learning experiences with AI-generated micro-courses!

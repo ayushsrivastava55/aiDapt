@@ -82,126 +82,124 @@ async function persistCourseContent(
   const db = getDb();
   const registeredAt = new Date().toISOString();
 
-  return db.transaction(async (tx) => {
-    const skillMetadata = {
-      normalizedTopic,
-      learnerLevel: courseContent.learnerLevel,
-      tone: courseContent.tone,
-      objectives: courseContent.objectives,
-      focusAreas: courseContent.focusAreas,
-      prerequisites: courseContent.prerequisites,
-      recommendedDurationMinutes: courseContent.recommendedDurationMinutes,
-      generationMetadata: courseContent.metadata,
-    } satisfies NewSkill["metadata"];
+  const skillMetadata = {
+    normalizedTopic,
+    learnerLevel: courseContent.learnerLevel,
+    tone: courseContent.tone,
+    objectives: courseContent.objectives,
+    focusAreas: courseContent.focusAreas,
+    prerequisites: courseContent.prerequisites,
+    recommendedDurationMinutes: courseContent.recommendedDurationMinutes,
+    generationMetadata: courseContent.metadata,
+  } satisfies NewSkill["metadata"];
 
-    const [skill] = await tx
-      .insert(skills)
-      .values({
-        name: topic,
-        description: courseContent.overview,
-        level: 1,
-        metadata: skillMetadata,
-      })
-      .returning();
+  const [skill] = await db
+    .insert(skills)
+    .values({
+      name: topic,
+      description: courseContent.overview,
+      level: 1,
+      metadata: skillMetadata,
+    })
+    .returning();
 
-    const unitMetadata = {
-      normalizedTopic,
-      version: courseContent.version,
-      overview: courseContent.overview,
-      closingSummary: courseContent.closingSummary,
-      objectives: courseContent.objectives,
-      focusAreas: courseContent.focusAreas,
-      prerequisites: courseContent.prerequisites,
-      recommendedDurationMinutes: courseContent.recommendedDurationMinutes,
-      conceptCardCount: courseContent.conceptCards.length,
-      quizItemCount: courseContent.quiz.length,
-      generationMetadata: courseContent.metadata,
-    } satisfies NewUnit["metadata"];
+  const unitMetadata = {
+    normalizedTopic,
+    version: courseContent.version,
+    overview: courseContent.overview,
+    closingSummary: courseContent.closingSummary,
+    objectives: courseContent.objectives,
+    focusAreas: courseContent.focusAreas,
+    prerequisites: courseContent.prerequisites,
+    recommendedDurationMinutes: courseContent.recommendedDurationMinutes,
+    conceptCardCount: courseContent.conceptCards.length,
+    quizItemCount: courseContent.quiz.length,
+    generationMetadata: courseContent.metadata,
+  } satisfies NewUnit["metadata"];
 
-    const [unit] = await tx
-      .insert(units)
-      .values({
-        skillId: skill.id,
-        name: `${topic} Course`,
-        description: courseContent.closingSummary,
-        order: 0,
-        metadata: unitMetadata,
-      })
-      .returning();
-
-    const activitiesData: NewActivity[] = [];
-
-    courseContent.conceptCards.forEach((card, index) => {
-      activitiesData.push({
-        unitId: unit.id,
-        name: card.title,
-        description: card.summary,
-        type: "practice",
-        order: index,
-        content: {
-          kind: "concept-card",
-          version: courseContent.version,
-          topic: courseContent.topic,
-          card,
-        },
-        metadata: {
-          sourceType: "microcourse",
-          normalizedTopic,
-          conceptCardId: card.id,
-        },
-      });
-    });
-
-    const baseOrder = courseContent.conceptCards.length;
-    courseContent.quiz.forEach((quizItem, index) => {
-      const truncatedQuestion =
-        quizItem.question.length > 70
-          ? `${quizItem.question.slice(0, 67).trimEnd()}…`
-          : quizItem.question;
-
-      activitiesData.push({
-        unitId: unit.id,
-        name: truncatedQuestion,
-        description: quizItem.explanation,
-        type: "quiz",
-        order: baseOrder + index,
-        content: {
-          kind: "quiz-item",
-          version: courseContent.version,
-          topic: courseContent.topic,
-          quizItem,
-        },
-        metadata: {
-          sourceType: "microcourse",
-          normalizedTopic,
-          quizItemId: quizItem.id,
-          difficulty: quizItem.difficulty,
-        },
-      });
-    });
-
-    if (activitiesData.length > 0) {
-      await tx.insert(activities).values(activitiesData);
-    }
-
-    await tx.insert(skillStates).values({
-      learnerId,
+  const [unit] = await db
+    .insert(units)
+    .values({
       skillId: skill.id,
-      status: "not_started",
-      progress: 0,
+      name: `${topic} Course`,
+      description: courseContent.closingSummary,
+      order: 0,
+      metadata: unitMetadata,
+    })
+    .returning();
+
+  const activitiesData: NewActivity[] = [];
+
+  courseContent.conceptCards.forEach((card, index) => {
+    activitiesData.push({
+      unitId: unit.id,
+      name: card.title,
+      description: card.summary,
+      type: "practice",
+      order: index,
+      content: {
+        kind: "concept-card",
+        version: courseContent.version,
+        topic: courseContent.topic,
+        card,
+      },
       metadata: {
-        topic,
+        sourceType: "microcourse",
         normalizedTopic,
-        registeredAt,
+        conceptCardId: card.id,
       },
     });
-
-    return {
-      unitId: unit.id,
-      skillId: skill.id,
-      activityCount: activitiesData.length,
-    } as const;
   });
+
+  const baseOrder = courseContent.conceptCards.length;
+  courseContent.quiz.forEach((quizItem, index) => {
+    const truncatedQuestion =
+      quizItem.question.length > 70
+        ? `${quizItem.question.slice(0, 67).trimEnd()}…`
+        : quizItem.question;
+
+    activitiesData.push({
+      unitId: unit.id,
+      name: truncatedQuestion,
+      description: quizItem.explanation,
+      type: "quiz",
+      order: baseOrder + index,
+      content: {
+        kind: "quiz-item",
+        version: courseContent.version,
+        topic: courseContent.topic,
+        quizItem,
+      },
+      metadata: {
+        sourceType: "microcourse",
+        normalizedTopic,
+        quizItemId: quizItem.id,
+        difficulty: quizItem.difficulty,
+      },
+    });
+  });
+
+  if (activitiesData.length > 0) {
+    await db.insert(activities).values(activitiesData);
+  }
+
+  await db.insert(skillStates).values({
+    learnerId,
+    skillId: skill.id,
+    status: "not_started",
+    progress: 0,
+    metadata: {
+      topic,
+      normalizedTopic,
+      registeredAt,
+    },
+  });
+
+  return {
+    unitId: unit.id,
+    skillId: skill.id,
+    activityCount: activitiesData.length,
+  } as const;
 }
 
 export async function POST(request: NextRequest) {

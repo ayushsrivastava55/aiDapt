@@ -20,6 +20,9 @@ const navigation = [
   { label: "Home", href: "/", external: false },
   { label: "Learn", href: "/learn", external: false },
   { label: "Progress", href: "/progress", external: false },
+  { label: "Social", href: "/social", external: false },
+  { label: "Study Rooms", href: "/study-rooms", external: false },
+  { label: "Achievements", href: "/achievements", external: false },
   { label: "Health Check", href: "/api/health", external: false },
   { label: "Next.js Docs", href: "https://nextjs.org/docs/app", external: true },
   { label: "Drizzle ORM", href: "https://orm.drizzle.team", external: true },
@@ -27,12 +30,12 @@ const navigation = [
 ] as const;
 
 const navLinkClasses =
-  "rounded-full border border-border/70 px-4 py-2 text-sm font-medium transition-colors hover:border-foreground/50 hover:text-foreground";
+  "rounded-base border-2 border-border px-4 py-2 text-sm font-heading transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-shadow bg-background shadow-shadow";
 
 export const metadata: Metadata = {
-  title: "Next.js AI Starter",
+  title: "aiDapt - AI Learning Platform",
   description:
-    "TypeScript-first Next.js App Router project with Drizzle ORM, Neon, Tailwind CSS, and the OpenAI Agents SDK.",
+    "Intelligent learning platform that generates personalized micro-courses using AI. Create adaptive learning experiences.",
 };
 
 export default function RootLayout({
@@ -46,17 +49,18 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} bg-background font-sans text-foreground antialiased`}>
         <div className="flex min-h-screen flex-col">
-          <header className="border-b border-border/60 bg-surface/70 backdrop-blur">
-            <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-6 py-6 sm:flex-row sm:items-end sm:justify-between">
-              <div className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.4em] text-muted-foreground">
-                  Starter
-                </span>
-                <h1 className="text-2xl font-semibold tracking-tight">Next.js AI Starter</h1>
-                <p className="max-w-xl text-sm text-muted-foreground">
-                  An opinionated foundation for AI-enabled products that pairs the Next.js App Router
-                  with typed database access and modern tooling.
-                </p>
+          <header className="border-b-4 border-border bg-main shadow-shadow">
+            <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">🧠</span>
+                  <div>
+                    <h1 className="text-3xl font-heading tracking-tight text-main-foreground">aiDapt</h1>
+                    <p className="text-sm font-base text-main-foreground/80">
+                      AI-Powered Learning Platform
+                    </p>
+                  </div>
+                </div>
               </div>
               <nav className="flex flex-wrap gap-3 text-muted-foreground">
                 {navigation.map((item) =>
@@ -79,15 +83,23 @@ export default function RootLayout({
               </nav>
             </div>
           </header>
-          <main className="flex-1">
-            <div className="mx-auto w-full max-w-5xl px-6 py-12 sm:py-16 lg:py-20">{children}</div>
+          <main className="flex-1 bg-background">
+            <div className="mx-auto w-full max-w-6xl px-6 py-12 sm:py-16 lg:py-20">{children}</div>
           </main>
-          <footer className="border-t border-border/60 bg-surface/70">
-            <div className="mx-auto flex w-full max-w-5xl flex-col items-start gap-3 px-6 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-              <span>&copy; {currentYear} Next.js AI Starter</span>
-              <code className="rounded-md bg-foreground/10 px-3 py-1.5 font-mono text-xs text-foreground">
-                npm run dev
-              </code>
+          <footer className="border-t-4 border-border bg-secondary-background shadow-shadow mt-auto">
+            <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-4 px-6 py-8 text-sm font-base sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🤖</span>
+                <span className="font-heading text-secondary-foreground">
+                  &copy; {currentYear} aiDapt - Powered by AI Agents
+                </span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-background border-2 border-border rounded-base shadow-shadow">
+                <span className="text-accent">⚡</span>
+                <code className="font-mono text-xs text-foreground font-heading">
+                  7 AI AGENTS ACTIVE
+                </code>
+              </div>
             </div>
           </footer>
         </div>

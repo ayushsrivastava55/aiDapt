@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Button } from "@/lib/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/lib/components/ui/card";
+import { Input } from "@/lib/components/ui/input";
+import { Badge } from "@/lib/components/ui/badge";
 
 const tones = ["encouraging", "neutral", "direct"] as const;
 const levels = ["beginner", "intermediate", "advanced", "mixed"] as const;
@@ -58,131 +62,178 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col gap-10">
-      <section className="space-y-4">
-        <span className="inline-flex w-fit items-center rounded-full border border-border/60 bg-surface/80 px-3 py-1 text-xs font-medium uppercase tracking-[0.3em] text-muted-foreground">
-          Microcourse Builder
-        </span>
-        <div className="space-y-2">
-          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">What do you want to learn?</h2>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Enter a topic and we will generate a short course with concept cards and a quiz. Your progress is tracked anonymously in this browser.
-          </p>
+    <div className="space-y-12">
+      {/* Hero Section */}
+      <section className="text-center space-y-8">
+        <div className="space-y-4">
+          <Badge variant="accent" className="text-lg px-6 py-2 font-heading">
+            🧠 AI-POWERED LEARNING
+          </Badge>
+          <div className="space-y-4">
+            <h1 className="text-6xl font-heading tracking-tight text-foreground">
+              WHAT DO YOU WANT TO
+              <span className="block text-7xl bg-gradient-to-r from-accent to-main bg-clip-text text-transparent">
+                LEARN?
+              </span>
+            </h1>
+            <p className="text-xl font-base text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Enter any topic and our 7 specialized AI agents will create a personalized micro-course
+              with concept cards, quizzes, and adaptive learning paths just for you!
+            </p>
+          </div>
+        </div>
+
+        {/* Agent Showcase */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
+          {[
+            { name: "Course Builder", emoji: "🏗️" },
+            { name: "Assessment Specialist", emoji: "📝" },
+            { name: "Learning Path Optimizer", emoji: "🛤️" },
+            { name: "Difficulty Calibrator", emoji: "⚖️" },
+            { name: "Resource Curator", emoji: "📚" },
+            { name: "Progress Analytics", emoji: "📊" },
+            { name: "Explanation Coach", emoji: "🎯" },
+            { name: "Agent Coordinator", emoji: "🤖" },
+          ].map((agent) => (
+            <Badge key={agent.name} variant="outline" className="p-3 flex flex-col items-center gap-1">
+              <span className="text-2xl">{agent.emoji}</span>
+              <span className="text-xs font-heading">{agent.name}</span>
+            </Badge>
+          ))}
         </div>
       </section>
 
-      <section className="rounded-xl border border-border/60 bg-surface/70 p-6">
-        <form className="grid gap-4" onSubmit={onSubmit}>
-          <div className="grid gap-2">
-            <label htmlFor="topic" className="text-sm font-medium">
-              Topic
-            </label>
-            <input
-              id="topic"
-              className="rounded-md border border-border/60 bg-background/60 px-3 py-2 text-sm outline-none focus:border-foreground/50"
-              placeholder="e.g. Basics of photosynthesis"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <label htmlFor="emphasis" className="text-sm font-medium">
-              Emphasis (optional)
-            </label>
-            <input
-              id="emphasis"
-              className="rounded-md border border-border/60 bg-background/60 px-3 py-2 text-sm outline-none focus:border-foreground/50"
-              placeholder="e.g. real-world examples or common pitfalls"
-              value={emphasis}
-              onChange={(e) => setEmphasis(e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Tone</label>
-              <select
-                className="rounded-md border border-border/60 bg-background/60 px-3 py-2 text-sm"
-                value={tone}
-                onChange={(e) => setTone(e.target.value as any)}
-              >
-                {tones.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
+      {/* Course Generation Form */}
+      <Card className="max-w-4xl mx-auto">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl">START LEARNING NOW</CardTitle>
+          <CardDescription className="text-lg">
+            Our AI agents will analyze your input and create the perfect learning experience
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className="space-y-6" onSubmit={onSubmit}>
+            <div className="space-y-3">
+              <label htmlFor="topic" className="text-lg font-heading block">
+                What topic interests you? 🤔
+              </label>
+              <Input
+                id="topic"
+                placeholder="e.g., Machine Learning Basics, Photosynthesis, JavaScript Functions..."
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                required
+                className="text-lg p-4 h-14"
+              />
             </div>
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">Learner level</label>
-              <select
-                className="rounded-md border border-border/60 bg-background/60 px-3 py-2 text-sm"
-                value={level}
-                onChange={(e) => setLevel(e.target.value as any)}
-              >
-                {levels.map((l) => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
+
+            <div className="space-y-3">
+              <label htmlFor="emphasis" className="text-lg font-heading block">
+                Any specific focus? (optional) 💡
+              </label>
+              <Input
+                id="emphasis"
+                placeholder="e.g., real-world examples, practical applications, common mistakes..."
+                value={emphasis}
+                onChange={(e) => setEmphasis(e.target.value)}
+                className="text-lg p-4 h-14"
+              />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">Concept cards</label>
-                <input
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-3">
+                <label className="text-sm font-heading block">TONE 🎭</label>
+                <select
+                  className="w-full h-12 px-4 rounded-base border-2 border-border bg-background font-base shadow-shadow focus:translate-x-[-2px] focus:translate-y-[-2px] focus:shadow-shadow-hover transition-all"
+                  value={tone}
+                  onChange={(e) => setTone(e.target.value as typeof tone)}
+                >
+                  {tones.map((t) => (
+                    <option key={t} value={t}>
+                      {t.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-sm font-heading block">LEVEL 📈</label>
+                <select
+                  className="w-full h-12 px-4 rounded-base border-2 border-border bg-background font-base shadow-shadow focus:translate-x-[-2px] focus:translate-y-[-2px] focus:shadow-shadow-hover transition-all"
+                  value={level}
+                  onChange={(e) => setLevel(e.target.value as typeof level)}
+                >
+                  {levels.map((l) => (
+                    <option key={l} value={l}>
+                      {l.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-sm font-heading block">CONCEPTS 🎯</label>
+                <Input
                   type="number"
                   min={2}
                   max={6}
                   value={conceptCount}
                   onChange={(e) => setConceptCount(Number(e.target.value))}
-                  className="rounded-md border border-border/60 bg-background/60 px-3 py-2 text-sm"
+                  className="h-12"
                 />
               </div>
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">Quiz items</label>
-                <input
+
+              <div className="space-y-3">
+                <label className="text-sm font-heading block">QUIZ Q&apos;S ❓</label>
+                <Input
                   type="number"
                   min={3}
                   max={6}
                   value={quizCount}
                   onChange={(e) => setQuizCount(Number(e.target.value))}
-                  className="rounded-md border border-border/60 bg-background/60 px-3 py-2 text-sm"
+                  className="h-12"
                 />
               </div>
             </div>
-          </div>
 
-          {error && (
-            <div className="rounded-md border border-red-300 bg-red-50/70 p-3 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
-              {error}
-            </div>
-          )}
-          {info && (
-            <div className="rounded-md border border-blue-300 bg-blue-50/70 p-3 text-sm text-blue-800 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-200">
-              {info}
-            </div>
-          )}
+            {error && (
+              <Card className="border-destructive bg-destructive/10">
+                <CardContent className="p-4">
+                  <p className="text-destructive font-base">⚠️ {error}</p>
+                </CardContent>
+              </Card>
+            )}
 
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={busy || !topic.trim()}
-              className="rounded-md bg-foreground/10 px-4 py-2 text-sm font-medium disabled:opacity-50"
-            >
-              {busy ? "Generating…" : "Generate course"}
-            </button>
-            <Link className="rounded-md border border-border/60 px-4 py-2 text-sm" href="/learn">
-              Go to Learn
-            </Link>
-            <Link className="rounded-md border border-border/60 px-4 py-2 text-sm" href="/progress">
-              View Progress
-            </Link>
-          </div>
-        </form>
-      </section>
+            {info && (
+              <Card className="border-accent bg-accent/10">
+                <CardContent className="p-4">
+                  <p className="text-accent-foreground font-base">ℹ️ {info}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-6">
+              <Button
+                type="submit"
+                disabled={busy || !topic.trim()}
+                size="lg"
+                className="w-full sm:w-auto text-lg px-8 py-4 h-auto"
+              >
+                {busy ? "🤖 AI AGENTS WORKING..." : "🚀 GENERATE MY COURSE!"}
+              </Button>
+
+              <div className="flex gap-3">
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/learn">📚 Go to Learn</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/progress">📊 View Progress</Link>
+                </Button>
+              </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

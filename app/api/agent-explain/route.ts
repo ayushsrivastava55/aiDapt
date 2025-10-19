@@ -131,7 +131,7 @@ export async function POST(request: Request) {
 
     let topic = input.topic?.trim();
     let skillContext: SkillContext = { skill: null, skillState: null, metadata: undefined };
-    let activityRecord: (typeof activities.$inferSelect & { unit?: { skill?: Skill | null } | null }) | null = null;
+    let activityRecord: (typeof activities.$inferSelect & { unit?: { skill?: typeof skills.$inferSelect | null } | null }) | null | undefined = null;
     let lastAttempt: (typeof attempts.$inferSelect) | null = null;
     let activitySrsState:
       | (SkillSRSMetadata["activityStates"] extends infer T
@@ -208,7 +208,7 @@ export async function POST(request: Request) {
     }
 
     const skillMetadata = (skillContext.skillState?.metadata as SkillSRSMetadata | null) ?? skillContext.metadata;
-    const inferredLearnerLevel = normalizeLearnerLevel(skillMetadata?.learnerLevel);
+    const inferredLearnerLevel = normalizeLearnerLevel((skillMetadata as Record<string, unknown>)?.learnerLevel);
     const contextNotes = buildContextNotes(input.contextNotes, lastAttempt, activitySrsState);
 
     const explanation: TailoredExplanationContent = await generateTailoredExplanation({

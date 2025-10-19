@@ -1,32 +1,91 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f9fafb;
-  --surface: rgba(255, 255, 255, 0.86);
-  --border: rgba(15, 23, 42, 0.12);
-  --foreground: #0f172a;
-  --muted-foreground: rgba(15, 23, 42, 0.65);
+  /* Neobrutalism Color Palette */
+  --background: #fef9e7;
+  --surface: #ffffff;
+  --border: #1a1a1a;
+  --foreground: #1a1a1a;
+  --muted-foreground: #4a4a4a;
+
+  /* Neobrutalism Specific Colors */
+  --main: #fef08a;
+  --main-foreground: #1a1a1a;
+  --secondary: #e4e4e7;
+  --secondary-foreground: #1a1a1a;
+  --accent: #f97316;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  /* Shadow and Effects */
+  --shadow: 4px 4px 0px #1a1a1a;
+  --shadow-hover: 6px 6px 0px #1a1a1a;
+  --box-shadow-x: -4px;
+  --box-shadow-y: -4px;
+  --reverse-box-shadow-x: 4px;
+  --reverse-box-shadow-y: 4px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #020817;
-    --surface: rgba(2, 8, 23, 0.6);
-    --border: rgba(148, 163, 184, 0.18);
-    --foreground: #e2e8f0;
-    --muted-foreground: rgba(148, 163, 184, 0.78);
+    --background: #0c0a09;
+    --surface: #1c1917;
+    --border: #fbbf24;
+    --foreground: #fef3c7;
+    --muted-foreground: #a8a29e;
+
+    --main: #fbbf24;
+    --main-foreground: #0c0a09;
+    --secondary: #292524;
+    --secondary-foreground: #fef3c7;
+    --accent: #f97316;
+    --accent-foreground: #ffffff;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    --shadow: 4px 4px 0px #fbbf24;
+    --shadow-hover: 6px 6px 0px #fbbf24;
   }
 }
 
 @theme inline {
+  /* Base Colors */
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-border: var(--border);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
+
+  /* Neobrutalism Colors */
+  --color-main: var(--main);
+  --color-main-foreground: var(--main-foreground);
+  --color-secondary-background: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  /* Typography */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --radius-lg: 1rem;
+  --font-base: 500;
+  --font-heading: 800;
+
+  /* Border Radius */
+  --radius-base: 6px;
+  --radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-shadow: var(--shadow);
+  --shadow-shadow-hover: var(--shadow-hover);
+
+  /* Box Shadow Offsets */
+  --translate-box-shadow-x: var(--box-shadow-x);
+  --translate-box-shadow-y: var(--box-shadow-y);
+  --translate-reverse-box-shadow-x: var(--reverse-box-shadow-x);
+  --translate-reverse-box-shadow-y: var(--reverse-box-shadow-y);
 }
 
 body {
@@ -45,4 +104,76 @@ a {
 code {
   font-family: var(--font-geist-mono, ui-monospace, SFMono-Regular, SFMono, Menlo, Monaco, Consolas,
       "Liberation Mono", "Courier New", monospace);
+}
+
+/* Neobrutalism animations and effects */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.3) translate(20px, 20px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05) translate(-2px, -2px);
+  }
+  70% {
+    transform: scale(0.9) translate(1px, 1px);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: var(--shadow);
+  }
+  50% {
+    box-shadow: var(--shadow-hover), 0 0 20px var(--accent);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Neobrutalism hover effects */
+.neo-hover {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neo-hover:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.neo-hover:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--border);
+}
+
+/* Custom gradient backgrounds */
+.gradient-brutal {
+  background: linear-gradient(135deg, var(--main) 0%, var(--accent) 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--main) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

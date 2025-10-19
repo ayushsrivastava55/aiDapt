@@ -69,7 +69,7 @@ const microcourseOutputSchema = z.object({
   overview: z.string(),
   conceptCards: z.array(conceptCardSchema).min(1),
   quizItems: z.array(quizItemSchema).min(1),
-  recommendedDurationMinutes: z.union([z.number(), z.string()]).optional(),
+  recommendedDurationMinutes: z.union([z.number(), z.string()]).nullable().optional(),
   closingSummary: z.string(),
 });
 
@@ -781,5 +781,709 @@ export const generateTailoredExplanation = async (
     }
 
     throw new AgentServiceError("Unable to generate tailored explanation", { cause: error });
+  }
+};
+
+// ===== ASSESSMENT SPECIALIST AGENT =====
+
+const diagnosticQuestionSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  type: z.enum(["multiple_choice", "open_ended", "true_false", "matching"]),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+  targetConcept: z.string(),
+  options: z.array(z.object({
+    id: z.string(),
+    text: z.string(),
+    isCorrect: z.boolean(),
+  })).optional(),
+  expectedAnswer: z.string().optional(),
+  scoringRubric: z.string().optional(),
+});
+
+const assessmentOutputSchema = z.object({
+  assessmentType: z.enum(["diagnostic", "formative", "summative"]),
+  title: z.string(),
+  description: z.string(),
+  estimatedMinutes: z.number(),
+  questions: z.array(diagnosticQuestionSchema).min(3).max(10),
+  learningObjectives: z.array(z.string()),
+  prerequisiteSkills: z.array(z.string()),
+  adaptiveLogic: z.string(),
+});
+
+export type AssessmentContent = z.infer<typeof assessmentOutputSchema>;
+export type GenerateAssessmentParams = {
+  topic: string;
+  learnerLevel?: LearnerLevel;
+  assessmentType: "diagnostic" | "formative" | "summative";
+  targetConcepts: string[];
+  questionCount?: number;
+  timeLimit?: number;
+};
+
+// ===== LEARNING PATH OPTIMIZER AGENT =====
+
+const learningStepSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  estimatedMinutes: z.number(),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+  prerequisites: z.array(z.string()),
+  learningObjectives: z.array(z.string()),
+  contentType: z.enum(["concept", "practice", "assessment", "project"]),
+  resources: z.array(z.object({
+    type: z.enum(["reading", "video", "interactive", "quiz"]),
+    title: z.string(),
+    url: z.string().optional(),
+    description: z.string(),
+  })),
+});
+
+const learningPathOutputSchema = z.object({
+  pathTitle: z.string(),
+  description: z.string(),
+  totalEstimatedHours: z.number(),
+  difficultyProgression: z.array(z.enum(["easy", "medium", "hard"])),
+  learningSteps: z.array(learningStepSchema).min(3).max(15),
+  milestones: z.array(z.object({
+    stepIndex: z.number(),
+    title: z.string(),
+    achievement: z.string(),
+  })),
+  adaptationPoints: z.array(z.object({
+    stepIndex: z.number(),
+    condition: z.string(),
+    alternativeAction: z.string(),
+  })),
+});
+
+export type LearningPathContent = z.infer<typeof learningPathOutputSchema>;
+export type GenerateLearningPathParams = {
+  goals: string[];
+  currentLevel: LearnerLevel;
+  timeAvailable: number;
+  preferredPace: "slow" | "moderate" | "fast";
+  interests: string[];
+  weakAreas?: string[];
+  strongAreas?: string[];
+};
+
+// ===== DIFFICULTY CALIBRATION AGENT =====
+
+const difficultyCalibrationSchema = z.object({
+  currentDifficulty: z.enum(["too_easy", "appropriate", "too_hard"]),
+  recommendedAdjustment: z.enum(["decrease", "maintain", "increase"]),
+  adjustmentMagnitude: z.enum(["slight", "moderate", "significant"]),
+  reasoning: z.string(),
+  specificChanges: z.array(z.object({
+    aspect: z.enum(["vocabulary", "concepts", "problem_complexity", "support_level"]),
+    change: z.string(),
+  })),
+  nextContentRecommendation: z.string(),
+  confidenceLevel: z.number().min(0).max(1),
+});
+
+export type DifficultyCalibration = z.infer<typeof difficultyCalibrationSchema>;
+export type CalibrateDifficultyParams = {
+  learnerPerformance: {
+    accuracy: number;
+    timeSpent: number;
+    attemptsCount: number;
+    frustrationIndicators: string[];
+  };
+  contentMetrics: {
+    currentDifficulty: string;
+    targetSkills: string[];
+    complexity: number;
+  };
+  learnerContext: {
+    level: LearnerLevel;
+    recentPerformance: number[];
+    preferences: string[];
+  };
+};
+
+// ===== RESOURCE CURATOR AGENT =====
+
+const curatedResourceSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  type: z.enum(["article", "video", "interactive", "book", "course", "tool"]),
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]),
+  estimatedMinutes: z.number(),
+  relevanceScore: z.number().min(0).max(10),
+  learningObjectives: z.array(z.string()),
+  tags: z.array(z.string()),
+  url: z.string().optional(),
+  provider: z.string(),
+  cost: z.enum(["free", "paid", "freemium"]),
+  quality: z.number().min(1).max(5),
+});
+
+const resourceCurationSchema = z.object({
+  topic: z.string(),
+  searchQuery: z.string(),
+  resources: z.array(curatedResourceSchema).min(3).max(10),
+  recommendationReason: z.string(),
+  learningPath: z.array(z.string()),
+  alternativeTopics: z.array(z.string()),
+});
+
+export type ResourceCuration = z.infer<typeof resourceCurationSchema>;
+export type CurateResourcesParams = {
+  topic: string;
+  learnerLevel: LearnerLevel;
+  learningObjectives: string[];
+  preferredFormats: string[];
+  timeAvailable: number;
+  budget: "free" | "paid" | "any";
+};
+
+// ===== PROGRESS ANALYTICS AGENT =====
+
+const learningInsightSchema = z.object({
+  type: z.enum(["strength", "weakness", "trend", "prediction", "recommendation"]),
+  title: z.string(),
+  description: z.string(),
+  confidence: z.number().min(0).max(1),
+  actionable: z.boolean(),
+  priority: z.enum(["low", "medium", "high"]),
+});
+
+const progressAnalyticsSchema = z.object({
+  overallProgress: z.number().min(0).max(100),
+  learningVelocity: z.number(),
+  masteryLevel: z.enum(["novice", "developing", "proficient", "advanced"]),
+  insights: z.array(learningInsightSchema).min(3).max(8),
+  predictions: z.object({
+    timeToMastery: z.number(),
+    riskFactors: z.array(z.string()),
+    successProbability: z.number().min(0).max(1),
+  }),
+  recommendations: z.array(z.object({
+    type: z.enum(["study_strategy", "content_focus", "time_management", "support"]),
+    title: z.string(),
+    description: z.string(),
+    priority: z.enum(["low", "medium", "high"]),
+  })),
+  nextMilestone: z.object({
+    title: z.string(),
+    estimatedDays: z.number(),
+    requirements: z.array(z.string()),
+  }),
+});
+
+export type ProgressAnalytics = z.infer<typeof progressAnalyticsSchema>;
+export type AnalyzeProgressParams = {
+  learnerId: string;
+  timeframe: "week" | "month" | "quarter" | "all";
+  focusAreas?: string[];
+  includeComparisons: boolean;
+};
+
+// ===== AGENT TOOL FUNCTIONS =====
+
+// Database query tools for agents
+const createDatabaseTools = () => [
+  async function queryLearnerProgress(learnerId: string, skillId?: string) {
+    // Tool implementation will be added with database queries
+    return { progress: 0, attempts: [], skillStates: [] };
+  },
+
+  async function querySkillDependencies(skillId: string) {
+    // Tool to get skill prerequisites and dependencies
+    return { prerequisites: [], dependents: [], difficulty: "medium" };
+  },
+
+  async function analyzePerformanceMetrics(learnerId: string, timeframe: string) {
+    // Tool to calculate performance statistics
+    return { accuracy: 0.8, averageTime: 120, improvementRate: 0.15 };
+  },
+];
+
+// External API tools for resource curation
+const createExternalTools = () => [
+  async function searchEducationalContent(query: string, filters: Record<string, unknown>) {
+    // Tool to search educational APIs (Khan Academy, Coursera, etc.)
+    return { results: [], totalFound: 0 };
+  },
+
+  async function validateContentQuality(url: string) {
+    // Tool to assess content quality and relevance
+    return { qualityScore: 4.5, relevanceScore: 8.5, readabilityLevel: "intermediate" };
+  },
+];
+
+// ===== ASSESSMENT SPECIALIST AGENT =====
+
+const buildAssessmentInstructions = (params: GenerateAssessmentParams): string => {
+  return `You are an Assessment Specialist Agent, expert in creating effective diagnostic and formative assessments.
+
+Your task is to create a ${params.assessmentType} assessment for the topic "${params.topic}" suitable for ${params.learnerLevel || "mixed"} level learners.
+
+Key Requirements:
+- Generate ${params.questionCount || 5} high-quality questions targeting: ${params.targetConcepts.join(", ")}
+- Vary question types to assess different cognitive levels
+- Include clear, unambiguous questions with appropriate difficulty progression
+- Provide detailed scoring rubrics and adaptive logic
+- Ensure questions can effectively identify knowledge gaps and misconceptions
+
+Assessment Design Principles:
+- Start with easier questions to build confidence
+- Progress to more challenging items that discriminate ability levels
+- Include questions that reveal common misconceptions
+- Design for ${params.timeLimit || 15} minute completion time
+- Ensure each question maps to specific learning objectives`;
+};
+
+export const generateAssessment = async (
+  params: GenerateAssessmentParams,
+  options: AgentCallOptions = {},
+): Promise<AssessmentContent> => {
+  ensureOpenAIConfigured();
+
+  const agent = new Agent({
+    name: "Assessment Specialist",
+    handoffDescription: "Creates diagnostic and formative assessments with adaptive logic",
+    instructions: buildAssessmentInstructions(params),
+    outputType: assessmentOutputSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  try {
+    const { result, attempts } = await runAgentWithRetry(agent,
+      `Create a comprehensive ${params.assessmentType} assessment for "${params.topic}".`, {
+      ...options,
+      taskName: "Assessment generation",
+      maxTurns: 4,
+    });
+
+    const rawOutput = result.finalOutput;
+    if (!rawOutput) {
+      throw new AgentServiceError("Assessment agent did not return structured output");
+    }
+
+    return assessmentOutputSchema.parse(rawOutput);
+  } catch (error) {
+    if (error instanceof AgentServiceError) {
+      throw error;
+    }
+    throw new AgentServiceError("Unable to generate assessment", { cause: error });
+  }
+};
+
+// ===== LEARNING PATH OPTIMIZER AGENT =====
+
+const buildLearningPathInstructions = (params: GenerateLearningPathParams): string => {
+  return `You are a Learning Path Optimizer Agent, expert in creating personalized learning journeys.
+
+Create an optimal learning path for a ${params.currentLevel} learner with these goals: ${params.goals.join(", ")}.
+
+Learner Profile:
+- Available time: ${params.timeAvailable} hours per week
+- Preferred pace: ${params.preferredPace}
+- Interests: ${params.interests.join(", ")}
+- Weak areas: ${params.weakAreas?.join(", ") || "None specified"}
+- Strong areas: ${params.strongAreas?.join(", ") || "None specified"}
+
+Path Design Principles:
+- Sequence content from foundational to advanced concepts
+- Incorporate learner interests to maintain engagement
+- Address weak areas with additional practice and support
+- Build on strong areas for confidence and momentum
+- Include regular checkpoints and milestones
+- Provide multiple pathways for different learning preferences
+- Balance theory, practice, and application`;
+};
+
+export const generateLearningPath = async (
+  params: GenerateLearningPathParams,
+  options: AgentCallOptions = {},
+): Promise<LearningPathContent> => {
+  ensureOpenAIConfigured();
+
+  const agent = new Agent({
+    name: "Learning Path Optimizer",
+    handoffDescription: "Creates personalized learning sequences and curricula",
+    instructions: buildLearningPathInstructions(params),
+    outputType: learningPathOutputSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  try {
+    const { result, attempts } = await runAgentWithRetry(agent,
+      `Design an optimal learning path to achieve these goals: ${params.goals.join(", ")}.`, {
+      ...options,
+      taskName: "Learning path optimization",
+      maxTurns: 4,
+    });
+
+    const rawOutput = result.finalOutput;
+    if (!rawOutput) {
+      throw new AgentServiceError("Learning path agent did not return structured output");
+    }
+
+    return learningPathOutputSchema.parse(rawOutput);
+  } catch (error) {
+    if (error instanceof AgentServiceError) {
+      throw error;
+    }
+    throw new AgentServiceError("Unable to generate learning path", { cause: error });
+  }
+};
+
+// ===== DIFFICULTY CALIBRATION AGENT =====
+
+const buildDifficultyCalibrationInstructions = (params: CalibrateDifficultyParams): string => {
+  return `You are a Difficulty Calibration Agent, expert in adapting content difficulty based on learner performance.
+
+Analyze this learner's performance data:
+- Accuracy: ${(params.learnerPerformance.accuracy * 100).toFixed(1)}%
+- Time spent: ${params.learnerPerformance.timeSpent} seconds
+- Number of attempts: ${params.learnerPerformance.attemptsCount}
+- Frustration indicators: ${params.learnerPerformance.frustrationIndicators.join(", ") || "None"}
+
+Current content metrics:
+- Difficulty level: ${params.contentMetrics.currentDifficulty}
+- Target skills: ${params.contentMetrics.targetSkills.join(", ")}
+- Complexity score: ${params.contentMetrics.complexity}/10
+
+Learner context:
+- Level: ${params.learnerContext.level}
+- Recent performance trend: ${params.learnerContext.recentPerformance.join(", ")}
+- Preferences: ${params.learnerContext.preferences.join(", ")}
+
+Calibration Guidelines:
+- Maintain optimal challenge level (70-85% success rate)
+- Prevent cognitive overload while avoiding boredom
+- Consider both accuracy and time efficiency
+- Account for learner's emotional state and motivation
+- Provide specific, actionable adjustments`;
+};
+
+export const calibrateDifficulty = async (
+  params: CalibrateDifficultyParams,
+  options: AgentCallOptions = {},
+): Promise<DifficultyCalibration> => {
+  ensureOpenAIConfigured();
+
+  const agent = new Agent({
+    name: "Difficulty Calibrator",
+    handoffDescription: "Analyzes performance and adjusts content difficulty in real-time",
+    instructions: buildDifficultyCalibrationInstructions(params),
+    outputType: difficultyCalibrationSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  try {
+    const { result, attempts } = await runAgentWithRetry(agent,
+      "Analyze the learner's performance and recommend difficulty adjustments.", {
+      ...options,
+      taskName: "Difficulty calibration",
+      maxTurns: 3,
+    });
+
+    const rawOutput = result.finalOutput;
+    if (!rawOutput) {
+      throw new AgentServiceError("Difficulty calibration agent did not return structured output");
+    }
+
+    return difficultyCalibrationSchema.parse(rawOutput);
+  } catch (error) {
+    if (error instanceof AgentServiceError) {
+      throw error;
+    }
+    throw new AgentServiceError("Unable to calibrate difficulty", { cause: error });
+  }
+};
+
+// ===== RESOURCE CURATOR AGENT =====
+
+const buildResourceCurationInstructions = (params: CurateResourcesParams): string => {
+  return `You are a Resource Curator Agent, expert in finding and evaluating educational content.
+
+Find high-quality learning resources for the topic "${params.topic}" suitable for ${params.learnerLevel} learners.
+
+Requirements:
+- Learning objectives: ${params.learningObjectives.join(", ")}
+- Preferred formats: ${params.preferredFormats.join(", ")}
+- Time available: ${params.timeAvailable} minutes
+- Budget constraint: ${params.budget}
+
+Curation Criteria:
+- Relevance to learning objectives (weight: 40%)
+- Content quality and accuracy (weight: 30%)
+- Appropriate difficulty level (weight: 20%)
+- Engagement and interactivity (weight: 10%)
+
+Focus on resources that:
+- Complement different learning styles
+- Provide practical, hands-on experience
+- Come from reputable educational sources
+- Include assessments or practice opportunities
+- Support progressive skill building`;
+};
+
+export const curateResources = async (
+  params: CurateResourcesParams,
+  options: AgentCallOptions = {},
+): Promise<ResourceCuration> => {
+  ensureOpenAIConfigured();
+
+  const agent = new Agent({
+    name: "Resource Curator",
+    handoffDescription: "Finds and evaluates educational resources and learning materials",
+    instructions: buildResourceCurationInstructions(params),
+    outputType: resourceCurationSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  try {
+    const { result, attempts } = await runAgentWithRetry(agent,
+      `Find the best educational resources for "${params.topic}" that match the specified criteria.`, {
+      ...options,
+      taskName: "Resource curation",
+      maxTurns: 4,
+    });
+
+    const rawOutput = result.finalOutput;
+    if (!rawOutput) {
+      throw new AgentServiceError("Resource curator agent did not return structured output");
+    }
+
+    return resourceCurationSchema.parse(rawOutput);
+  } catch (error) {
+    if (error instanceof AgentServiceError) {
+      throw error;
+    }
+    throw new AgentServiceError("Unable to curate resources", { cause: error });
+  }
+};
+
+// ===== PROGRESS ANALYTICS AGENT =====
+
+const buildProgressAnalyticsInstructions = (params: AnalyzeProgressParams): string => {
+  return `You are a Progress Analytics Agent, expert in analyzing learning patterns and predicting outcomes.
+
+Analyze learning progress for learner ${params.learnerId} over the ${params.timeframe} timeframe.
+
+Analysis Focus:
+${params.focusAreas ? `- Focus areas: ${params.focusAreas.join(", ")}` : "- Comprehensive analysis across all subjects"}
+${params.includeComparisons ? "- Include peer comparisons and benchmarks" : "- Individual progress analysis only"}
+
+Analytics Framework:
+- Identify learning patterns and trends
+- Detect strengths and areas for improvement
+- Predict learning outcomes and potential obstacles
+- Provide actionable recommendations
+- Calculate mastery progression rates
+- Assess study strategy effectiveness
+
+Generate insights that help learners:
+- Understand their learning journey
+- Optimize study strategies
+- Set realistic goals and milestones
+- Identify when to seek additional support
+- Maintain motivation and engagement`;
+};
+
+export const analyzeProgress = async (
+  params: AnalyzeProgressParams,
+  options: AgentCallOptions = {},
+): Promise<ProgressAnalytics> => {
+  ensureOpenAIConfigured();
+
+  const agent = new Agent({
+    name: "Progress Analytics",
+    handoffDescription: "Analyzes learning data to generate insights and predictions",
+    instructions: buildProgressAnalyticsInstructions(params),
+    outputType: progressAnalyticsSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  try {
+    const { result, attempts } = await runAgentWithRetry(agent,
+      `Analyze learning progress and generate comprehensive insights for learner ${params.learnerId}.`, {
+      ...options,
+      taskName: "Progress analytics",
+      maxTurns: 4,
+    });
+
+    const rawOutput = result.finalOutput;
+    if (!rawOutput) {
+      throw new AgentServiceError("Progress analytics agent did not return structured output");
+    }
+
+    return progressAnalyticsSchema.parse(rawOutput);
+  } catch (error) {
+    if (error instanceof AgentServiceError) {
+      throw error;
+    }
+    throw new AgentServiceError("Unable to analyze progress", { cause: error });
+  }
+};
+
+// ===== AGENT COORDINATOR WITH HANDOFFS =====
+
+export type CoordinatorRequest = {
+  type: "course_generation" | "assessment" | "learning_path" | "difficulty_calibration" | "resource_curation" | "progress_analysis" | "explanation";
+  content: unknown;
+  learnerContext?: {
+    id: string;
+    level: LearnerLevel;
+    preferences?: string[];
+  };
+};
+
+export type CoordinatorResponse = {
+  agentUsed: string;
+  result: unknown;
+  recommendations?: {
+    nextAgent?: string;
+    additionalActions?: string[];
+  };
+};
+
+const buildCoordinatorInstructions = (): string => {
+  return `You are the Learning Coordinator Agent, the orchestrator of the aiDapt learning platform.
+
+Your role is to intelligently route learner requests to the appropriate specialist agents and coordinate their responses.
+
+Available Specialist Agents:
+1. Microcourse Builder - Generates complete micro-courses with concept cards and quizzes
+2. Assessment Specialist - Creates diagnostic, formative, and summative assessments
+3. Learning Path Optimizer - Designs personalized learning sequences and curricula
+4. Difficulty Calibrator - Analyzes performance and adjusts content difficulty
+5. Resource Curator - Finds and evaluates educational materials and resources
+6. Progress Analytics - Analyzes learning data to generate insights and predictions
+7. Tailored Explanation Coach - Provides personalized explanations and tutoring
+
+Coordination Principles:
+- Route requests to the most appropriate specialist agent
+- Consider learner context and preferences
+- Suggest follow-up actions and agent handoffs
+- Maintain coherent learning experience across agents
+- Prioritize learner goals and outcomes
+
+When processing requests:
+1. Analyze the request type and learner context
+2. Determine the best specialist agent for the task
+3. Consider if multiple agents should be involved
+4. Provide clear reasoning for agent selection
+5. Suggest next steps and potential handoffs`;
+};
+
+export const coordinateAgents = async (
+  request: CoordinatorRequest,
+  options: AgentCallOptions = {},
+): Promise<CoordinatorResponse> => {
+  ensureOpenAIConfigured();
+
+  // Create individual agents for handoff
+  const microcourseAgent = new Agent({
+    name: "Microcourse Builder",
+    handoffDescription: "Generates concept cards and quiz items for a microcourse",
+    instructions: "You create complete micro-courses with concept cards and quizzes.",
+    outputType: microcourseOutputSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  const assessmentAgent = new Agent({
+    name: "Assessment Specialist",
+    handoffDescription: "Creates diagnostic and formative assessments with adaptive logic",
+    instructions: "You create effective assessments to measure and guide learning.",
+    outputType: assessmentOutputSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  const learningPathAgent = new Agent({
+    name: "Learning Path Optimizer",
+    handoffDescription: "Creates personalized learning sequences and curricula",
+    instructions: "You design optimal learning paths tailored to individual goals and contexts.",
+    outputType: learningPathOutputSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  const difficultyAgent = new Agent({
+    name: "Difficulty Calibrator",
+    handoffDescription: "Analyzes performance and adjusts content difficulty in real-time",
+    instructions: "You analyze performance data and recommend difficulty adjustments.",
+    outputType: difficultyCalibrationSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  const resourceAgent = new Agent({
+    name: "Resource Curator",
+    handoffDescription: "Finds and evaluates educational resources and learning materials",
+    instructions: "You find and curate high-quality educational resources.",
+    outputType: resourceCurationSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  const analyticsAgent = new Agent({
+    name: "Progress Analytics",
+    handoffDescription: "Analyzes learning data to generate insights and predictions",
+    instructions: "You analyze learning patterns and provide data-driven insights.",
+    outputType: progressAnalyticsSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  const explanationAgent = new Agent({
+    name: "Tailored Explanation Coach",
+    handoffDescription: "Creates personalized explanations with scaffolded steps",
+    instructions: "You provide personalized explanations and tutoring support.",
+    outputType: explanationOutputSchema,
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  // Main coordinator agent with handoff options
+  const coordinatorAgent = new Agent({
+    name: "Learning Coordinator",
+    handoffDescription: "Routes requests to appropriate specialist agents",
+    instructions: buildCoordinatorInstructions(),
+    model: DEFAULT_AGENT_MODEL,
+    modelSettings: DEFAULT_MODEL_SETTINGS,
+  });
+
+  try {
+    const prompt = `Process this ${request.type} request: ${JSON.stringify(request.content)}
+
+    Learner Context: ${request.learnerContext ? JSON.stringify(request.learnerContext) : "Not provided"}
+
+    Determine the best specialist agent to handle this request and coordinate the response.`;
+
+    const { result } = await runAgentWithRetry(coordinatorAgent, prompt, {
+      ...options,
+      taskName: "Agent coordination",
+      maxTurns: 6, // Allow for handoffs
+    });
+
+    return {
+      agentUsed: "Learning Coordinator",
+      result: result.finalOutput,
+      recommendations: {
+        nextAgent: "Based on coordinator analysis",
+        additionalActions: ["Follow coordinator recommendations"],
+      },
+    };
+  } catch (error) {
+    if (error instanceof AgentServiceError) {
+      throw error;
+    }
+    throw new AgentServiceError("Unable to coordinate agents", { cause: error });
   }
 };
